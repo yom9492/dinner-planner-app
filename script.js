@@ -3,6 +3,13 @@ class MealPlanManager {
         this.meals = {};
         this.history = [];
         this.shoppingList = [];
+        this.draggedElement = null;
+        this.categories = {
+            '和食': ['味噌汁', '煮物', 'すき焼き', '親子丼', '天ぷら', '刺身', '焼き魚', '肉じゃが', 'カレー', '丼もの'],
+            '洋食': ['パスタ', 'ピザ', 'ハンバーグ', 'ステーキ', 'サラダ', 'スープ', 'グラタン', 'リゾット', 'オムライス', 'サンドイッチ'],
+            '中華': ['チャーハン', '餃子', '麻婆豆腐', '回鍋肉', '青椒肉絲', '酢豚', '炒め物', '中華スープ', '春巻き', '担々麺'],
+            'その他': ['鍋', 'バーベキュー', 'お弁当', 'デリバリー', '外食']
+        };
         this.init();
     }
 
@@ -13,11 +20,13 @@ class MealPlanManager {
         this.renderHistory();
         this.renderShoppingList();
         this.updateWeekDates();
+        this.setupDragAndDrop();
     }
 
     bindEvents() {
         const clearAllBtn = document.getElementById('clear-all-btn');
         const savePlanBtn = document.getElementById('save-plan-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
         const addShoppingItemBtn = document.getElementById('add-shopping-item-btn');
         const shoppingItemInput = document.getElementById('shopping-item-input');
 
@@ -27,6 +36,10 @@ class MealPlanManager {
 
         savePlanBtn.addEventListener('click', () => {
             this.saveMealPlan();
+        });
+
+        exportCsvBtn.addEventListener('click', () => {
+            this.exportToCSV();
         });
 
         addShoppingItemBtn.addEventListener('click', () => {
@@ -45,11 +58,15 @@ class MealPlanManager {
         const currentMeal = this.meals[`${day}-${mealType}`] || '';
         
         mealContent.innerHTML = `
-            <input type="text" class="inline-edit" value="${currentMeal}" 
-                   placeholder="料理名を入力" 
-                   onblur="mealManager.saveEdit('${day}', '${mealType}', this.value)"
-                   onkeypress="if(event.key==='Enter') this.blur()"
-                   autofocus>
+            <div class="edit-container">
+                <input type="text" class="inline-edit" value="${currentMeal}" 
+                       placeholder="料理名を入力" 
+                       onblur="mealManager.saveEdit('${day}', '${mealType}', this.value)"
+                       onkeypress="if(event.key==='Enter') this.blur()"
+                       oninput="mealManager.showSuggestions(this, '${day}', '${mealType}')"
+                       autofocus>
+                <div class="suggestions" id="suggestions-${day}-${mealType}"></div>
+            </div>
         `;
         
         const input = mealContent.querySelector('.inline-edit');
@@ -90,9 +107,13 @@ class MealPlanManager {
         const mealContent = document.getElementById(`${day}-${mealType}`);
         
         if (mealName) {
+            const category = this.getMealCategory(mealName);
+            const categoryColor = this.getCategoryColor(category);
+            
             mealContent.innerHTML = `
-                <div class="meal-item">
+                <div class="meal-item" draggable="true" data-day="${day}" data-meal="${mealType}" data-name="${mealName}" style="background: ${categoryColor}">
                     <span class="meal-name">${mealName}</span>
+                    <span class="meal-category">${category}</span>
                     <button class="delete-btn" onclick="mealManager.deleteMeal('${day}', '${mealType}')" title="削除">×</button>
                 </div>
             `;
@@ -338,6 +359,176 @@ class MealPlanManager {
         if (storedShopping) {
             this.shoppingList = JSON.parse(storedShopping);
         }
+    }
+
+    setupDragAndDrop() {
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('meal-item')) {
+                this.draggedElement = e.target;
+                e.target.style.opacity = '0.5';
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('meal-item')) {
+                e.target.style.opacity = '1';
+                this.draggedElement = null;
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (e.target.closest('.meal-slot')) {
+                e.target.closest('.meal-slot').style.backgroundColor = '#e3f2fd';
+            }
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            if (e.target.closest('.meal-slot')) {
+                e.target.closest('.meal-slot').style.backgroundColor = '';
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetSlot = e.target.closest('.meal-slot');
+            
+            if (targetSlot && this.draggedElement) {
+                targetSlot.style.backgroundColor = '';
+                
+                const sourceMealSlot = this.draggedElement.closest('.meal-slot');
+                const sourceDay = sourceMealSlot.closest('.day-column').dataset.day;
+                const sourceMealType = sourceMealSlot.dataset.meal;
+                
+                const targetDay = targetSlot.closest('.day-column').dataset.day;
+                const targetMealType = targetSlot.dataset.meal;
+                
+                if (sourceDay !== targetDay || sourceMealType !== targetMealType) {
+                    const draggedMealName = this.draggedElement.dataset.name;
+                    
+                    const targetMealKey = `${targetDay}-${targetMealType}`;
+                    const sourceMealKey = `${sourceDay}-${sourceMealType}`;
+                    
+                    const existingTargetMeal = this.meals[targetMealKey];
+                    
+                    this.meals[targetMealKey] = draggedMealName;
+                    
+                    if (existingTargetMeal) {
+                        this.meals[sourceMealKey] = existingTargetMeal;
+                    } else {
+                        delete this.meals[sourceMealKey];
+                    }
+                    
+                    this.saveToStorage();
+                    this.renderMeals();
+                }
+            }
+        });
+    }
+
+    exportToCSV() {
+        const isEmpty = Object.keys(this.meals).length === 0;
+        
+        if (isEmpty) {
+            alert('エクスポートする献立がありません。');
+            return;
+        }
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = {
+            'monday': '月曜日',
+            'tuesday': '火曜日',
+            'wednesday': '水曜日',
+            'thursday': '木曜日',
+            'friday': '金曜日',
+            'saturday': '土曜日',
+            'sunday': '日曜日'
+        };
+
+        let csvContent = "曜日,夕食\n";
+        
+        days.forEach(day => {
+            const mealKey = `${day}-dinner`;
+            const mealName = this.meals[mealKey] || '';
+            csvContent += `${dayNames[day]},${mealName}\n`;
+        });
+
+        if (this.shoppingList.length > 0) {
+            csvContent += "\n買い物リスト\n";
+            this.shoppingList.forEach(item => {
+                const status = item.completed ? '完了' : '未完了';
+                csvContent += `${item.text},${status}\n`;
+            });
+        }
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        const today = new Date();
+        const dateString = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+        link.setAttribute('download', `献立_${dateString}.csv`);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert('献立をCSVファイルとしてエクスポートしました！');
+    }
+
+    showSuggestions(input, day, mealType) {
+        const value = input.value.toLowerCase();
+        const suggestionContainer = document.getElementById(`suggestions-${day}-${mealType}`);
+        
+        if (value.length < 1) {
+            suggestionContainer.innerHTML = '';
+            return;
+        }
+
+        const allSuggestions = [];
+        Object.values(this.categories).flat().forEach(meal => {
+            if (meal.toLowerCase().includes(value)) {
+                allSuggestions.push(meal);
+            }
+        });
+
+        if (allSuggestions.length === 0) {
+            suggestionContainer.innerHTML = '';
+            return;
+        }
+
+        const suggestionsHTML = allSuggestions.slice(0, 5).map(suggestion => 
+            `<div class="suggestion-item" onclick="mealManager.selectSuggestion('${suggestion}', '${day}', '${mealType}')">${suggestion}</div>`
+        ).join('');
+
+        suggestionContainer.innerHTML = suggestionsHTML;
+    }
+
+    selectSuggestion(suggestion, day, mealType) {
+        const input = document.querySelector(`#${day}-${mealType} .inline-edit`);
+        input.value = suggestion;
+        input.blur();
+    }
+
+    getMealCategory(mealName) {
+        for (const [category, meals] of Object.entries(this.categories)) {
+            if (meals.some(meal => meal.toLowerCase().includes(mealName.toLowerCase()) || mealName.toLowerCase().includes(meal.toLowerCase()))) {
+                return category;
+            }
+        }
+        return 'その他';
+    }
+
+    getCategoryColor(category) {
+        const colors = {
+            '和食': 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+            '洋食': 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+            '中華': 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+            'その他': 'linear-gradient(135deg, #e91e63 0%, #ad1457 100%)'
+        };
+        return colors[category] || colors['その他'];
     }
 }
 

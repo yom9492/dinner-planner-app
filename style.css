@@ -202,6 +202,21 @@ button:hover {
     box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
     width: 100%;
     justify-content: space-between;
+    cursor: move;
+    transition: all 0.2s ease;
+}
+
+.meal-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.4);
+}
+
+.meal-category {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
 }
 
 .meal-item .meal-name {
@@ -245,6 +260,16 @@ button:hover {
     box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
 }
 
+.export-btn {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    padding: 10px 20px;
+    margin-right: 10px;
+}
+
+.export-btn:hover {
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+}
+
 .clear-btn {
     background: linear-gradient(135deg, #f06292 0%, #e91e63 100%);
     padding: 10px 20px;
@@ -260,6 +285,11 @@ button:hover {
     font-size: 0.9rem;
 }
 
+.edit-container {
+    position: relative;
+    width: 100%;
+}
+
 .inline-edit {
     width: 100%;
     border: 2px solid #e91e63;
@@ -271,91 +301,205 @@ button:hover {
     color: #333;
 }
 
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e91e63;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8bbd9;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: #fce4ec;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
 @media (max-width: 768px) {
     .container {
-        padding: 10px;
+        padding: 15px;
     }
     
     header {
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .meal-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .meal-plan-section {
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .shopping-list-section {
+        padding: 20px;
+    }
+    
+    .history-section {
+        padding: 20px;
+    }
+    
+    .day-column {
+        padding: 18px;
+    }
+    
+    .meal-slot {
+        padding: 18px;
+        min-height: 70px;
+        font-size: 1.1rem;
+    }
+    
+    .inline-edit {
+        font-size: 16px;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .save-btn, .export-btn, .clear-btn {
+        padding: 18px 40px;
+        font-size: 1.1rem;
+        width: 100%;
+        max-width: 300px;
+        margin: 0;
+    }
+    
+    .shopping-input {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .shopping-input input {
+        padding: 18px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+    
+    .shopping-input button {
+        padding: 18px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+    
+    .shopping-item {
+        padding: 18px;
+        border-radius: 10px;
+    }
+    
+    .history-item {
+        padding: 18px;
+        border-radius: 10px;
+    }
+    
+    .week-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .week-dates {
+        align-self: center;
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
     }
     
     header h1 {
         font-size: 1.8rem;
     }
     
-    .meal-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .meal-plan-section {
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
     .day-column {
         padding: 15px;
-    }
-    
-    .meal-slot {
-        padding: 15px;
-        min-height: 60px;
-        font-size: 1rem;
-    }
-    
-    .inline-edit {
-        font-size: 16px;
-        padding: 12px;
-    }
-    
-    .clear-btn {
-        padding: 15px 30px;
-        font-size: 1.1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 8px;
-    }
-    
-    header h1 {
-        font-size: 1.6rem;
-    }
-    
-    .day-column {
-        padding: 12px;
     }
     
     .day-column h3 {
-        font-size: 1.1rem;
-        margin-bottom: 12px;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
     }
     
     .meal-slot {
-        padding: 12px;
-        min-height: 55px;
+        padding: 20px;
+        min-height: 80px;
     }
     
     .meal-item {
-        font-size: 0.9rem;
-        padding: 8px 12px;
+        font-size: 1rem;
+        padding: 12px 15px;
     }
     
     .meal-item .delete-btn {
-        width: 24px;
-        height: 24px;
-        font-size: 14px;
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
     }
     
     .empty-slot {
-        font-size: 0.85rem;
+        font-size: 0.95rem;
     }
     
     .inline-edit {
         font-size: 16px;
-        padding: 10px;
+        padding: 18px;
+        border-radius: 10px;
+    }
+    
+    .shopping-item {
+        padding: 20px;
+    }
+    
+    .shopping-text {
+        font-size: 1rem;
+    }
+    
+    .delete-shopping-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+    
+    .checkmark {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .shopping-checkbox input:checked ~ .checkmark:after {
+        left: 8px;
+        top: 3px;
+        width: 8px;
+        height: 12px;
     }
 }
 
