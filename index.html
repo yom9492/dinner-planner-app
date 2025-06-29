@@ -18,15 +18,46 @@
     
     <div class="container">
         <header>
-            <h1>🌸 1週間夕食管理</h1>
+            <div class="header-top">
+                <h1>🌸 1週間夕食管理</h1>
+                <div class="header-controls">
+                    <button id="dark-mode-toggle" class="icon-btn" title="ダークモード切り替え (Ctrl+D)" aria-label="ダークモードを切り替え">🌙</button>
+                </div>
+            </div>
+            
+            <!-- 検索機能 -->
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="meal-search" placeholder="料理名を検索..." aria-label="料理名を検索">
+                    <div id="search-results" class="search-results" style="display: none;"></div>
+                </div>
+            </div>
         </header>
         
         <main id="main-content" role="main">
             
+            <!-- お気に入り料理セクション -->
+            <div class="favorites-section">
+                <div class="section-header">
+                    <h2>⭐ お気に入り料理</h2>
+                    <span class="section-description">クリックして献立に追加</span>
+                </div>
+                <div id="favorites-list" class="favorites-list">
+                    <div class="no-favorites">お気に入りの料理はありません</div>
+                </div>
+            </div>
+            
             <div class="meal-plan-section">
                 <div class="week-header">
-                    <h2>今週の夕食</h2>
-                    <div class="week-dates" id="week-dates"></div>
+                    <div class="week-navigation">
+                        <button id="prev-week-btn" class="week-nav-btn" title="前の週 (Ctrl+←)" aria-label="前の週に移動">‹ 前週</button>
+                        <div class="week-info">
+                            <h2>今週の夕食</h2>
+                            <div class="week-dates" id="week-dates"></div>
+                        </div>
+                        <button id="next-week-btn" class="week-nav-btn" title="次の週 (Ctrl+→)" aria-label="次の週に移動">次週 ›</button>
+                    </div>
+                    <button id="current-week-btn" class="current-week-btn" style="display: none;" title="今週に戻る" aria-label="今週に戻る">今週に戻る</button>
                 </div>
                 <div class="meal-grid" id="meal-grid" role="grid" aria-label="週間夕食計画">
                     <div class="day-column" data-day="monday">
@@ -95,7 +126,12 @@
             </div>
             
             <div class="shopping-list-section">
-                <h2>お買い物リスト</h2>
+                <div class="section-header">
+                    <h2>🛒 お買い物リスト</h2>
+                    <button id="auto-generate-btn" class="auto-generate-btn" title="献立から材料を自動生成" aria-label="献立から材料を自動生成">
+                        🎯 材料生成
+                    </button>
+                </div>
                 <div class="shopping-input">
                     <label for="shopping-item-input" class="sr-only">買い物アイテムを入力</label>
                     <input type="text" id="shopping-item-input" placeholder="材料や調味料を入力" maxlength="50" aria-label="買い物アイテムを入力">
@@ -105,13 +141,13 @@
             </div>
             
             <div class="actions">
-                <button id="save-plan-btn" class="save-btn" title="Ctrl+S" aria-label="今週の献立を保存（ショートカット: Ctrl+S）">今週の献立を保存</button>
-                <button id="export-csv-btn" class="export-btn" title="Ctrl+E" aria-label="CSVファイルとしてエクスポート（ショートカット: Ctrl+E）">CSVエクスポート</button>
-                <button id="clear-all-btn" class="clear-btn" aria-label="すべての夕食をクリア">すべてクリア</button>
+                <button id="save-plan-btn" class="save-btn" title="Ctrl+S" aria-label="今週の献立を保存（ショートカット: Ctrl+S）">📅 今週の献立を保存</button>
+                <button id="export-csv-btn" class="export-btn" title="Ctrl+E" aria-label="CSVファイルとしてエクスポート（ショートカット: Ctrl+E）">📁 CSVエクスポート</button>
+                <button id="clear-all-btn" class="clear-btn" aria-label="すべての夕食をクリア">🗑️ すべてクリア</button>
             </div>
             
             <div class="history-section">
-                <h2>過去の献立</h2>
+                <h2>📋 過去の献立</h2>
                 <div id="history-list" class="history-list" role="list" aria-label="保存された献立履歴">
                     <div class="no-history">保存された献立はありません</div>
                 </div>
@@ -121,7 +157,7 @@
     
     <!-- キーボードヒント -->
     <div id="keyboard-hint" class="keyboard-hint" style="display: none;">
-        キーボードショートカット: Ctrl+S（保存）、Ctrl+E（エクスポート）
+        キーボードショートカット: Ctrl+S（保存）、Ctrl+E（エクスポート）、Ctrl+D（ダークモード）、Ctrl+←→（週切り替え）
     </div>
     
     <script src="script.js"></script>
@@ -138,12 +174,12 @@
             if (!hintShown && (e.ctrlKey || e.metaKey)) {
                 const hint = document.getElementById('keyboard-hint');
                 hint.style.display = 'block';
-                hint.style.animation = 'fadeInOut 3s ease-in-out';
+                hint.style.animation = 'fadeInOut 4s ease-in-out';
                 hintShown = true;
                 
                 setTimeout(() => {
                     hint.style.display = 'none';
-                }, 3000);
+                }, 4000);
             }
         });
     </script>

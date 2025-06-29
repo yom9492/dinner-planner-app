@@ -3,13 +3,25 @@ class MealPlanManager {
         this.meals = {};
         this.history = [];
         this.shoppingList = [];
+        this.favorites = []; // お気に入り料理
+        this.currentWeekOffset = 0; // 週のオフセット（0=今週、-1=先週、1=来週）
         this.draggedElement = null;
         this.currentSuggestionIndex = -1; // 候補選択用
+        this.darkMode = false; // ダークモード
         this.categories = {
             '和食': ['味噌汁', '煮物', 'すき焼き', '親子丼', '天ぷら', '刺身', '焼き魚', '肉じゃが', 'カレー', '丼もの'],
             '洋食': ['パスタ', 'ピザ', 'ハンバーグ', 'ステーキ', 'サラダ', 'スープ', 'グラタン', 'リゾット', 'オムライス', 'サンドイッチ'],
             '中華': ['チャーハン', '餃子', '麻婆豆腐', '回鍋肉', '青椒肉絲', '酢豚', '炒め物', '中華スープ', '春巻き', '担々麺'],
             'その他': ['鍋', 'バーベキュー', 'お弁当', 'デリバリー', '外食']
+        };
+        this.mealIngredients = {
+            // 料理名: [材料リスト]
+            'カレー': ['牛肉', '玉ねぎ', 'じゃがいも', '人参', 'カレールー', 'ご飯'],
+            'ハンバーグ': ['ひき肉', '玉ねぎ', '卵', 'パン粉', '牛乳', 'ソース'],
+            'パスタ': ['パスタ', 'トマト缶', 'にんにく', 'オリーブオイル', 'チーズ'],
+            '親子丼': ['鶏肉', '卵', '玉ねぎ', 'めんつゆ', 'ご飯', 'のり'],
+            '麻婆豆腐': ['豆腐', 'ひき肉', '豆板醤', 'ネギ', '味噌', 'ごま油'],
+            'チャーハン': ['ご飯', '卵', 'ネギ', 'チャーシュー', '醤油', 'ごま油']
         };
         this.init();
     }
@@ -66,14 +78,40 @@ class MealPlanManager {
         }, 5000);
     }
 
+    showSuccessMessage(message) {
+        const toast = document.createElement('div');
+        toast.className = 'success-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }
+
     init() {
         this.loadFromStorage();
         this.bindEvents();
         this.renderMeals();
         this.renderHistory();
         this.renderShoppingList();
+        this.renderFavorites();
         this.updateWeekDates();
         this.setupDragAndDrop();
+        this.initDarkMode();
+        this.initSearch();
     }
 
     bindEvents() {
@@ -82,6 +120,11 @@ class MealPlanManager {
         const exportCsvBtn = document.getElementById('export-csv-btn');
         const addShoppingItemBtn = document.getElementById('add-shopping-item-btn');
         const shoppingItemInput = document.getElementById('shopping-item-input');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const prevWeekBtn = document.getElementById('prev-week-btn');
+        const nextWeekBtn = document.getElementById('next-week-btn');
+        const currentWeekBtn = document.getElementById('current-week-btn');
+        const autoGenerateBtn = document.getElementById('auto-generate-btn');
 
         clearAllBtn.addEventListener('click', () => {
             this.clearAllMeals();
@@ -105,6 +148,26 @@ class MealPlanManager {
             }
         });
 
+        darkModeToggle.addEventListener('click', () => {
+            this.toggleDarkMode();
+        });
+
+        prevWeekBtn.addEventListener('click', () => {
+            this.changeWeek(-1);
+        });
+
+        nextWeekBtn.addEventListener('click', () => {
+            this.changeWeek(1);
+        });
+
+        currentWeekBtn.addEventListener('click', () => {
+            this.goToCurrentWeek();
+        });
+
+        autoGenerateBtn.addEventListener('click', () => {
+            this.autoGenerateIngredients();
+        });
+
         // 全体的なキーボードショートカット
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) {
@@ -116,6 +179,18 @@ class MealPlanManager {
                     case 'e':
                         e.preventDefault();
                         this.exportToCSV();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        this.toggleDarkMode();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        this.changeWeek(-1);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        this.changeWeek(1);
                         break;
                 }
             }
@@ -251,6 +326,7 @@ class MealPlanManager {
         if (mealName) {
             const category = this.getMealCategory(mealName);
             const categoryColor = this.getCategoryColor(category);
+            const isFavorite = this.favorites.includes(mealName);
             
             // セキュリティ: HTMLエスケープ
             const escapedMealName = this.escapeHtml(mealName);
@@ -266,12 +342,22 @@ class MealPlanManager {
                      tabindex="0"
                      role="button"
                      aria-label="${escapedMealName}、${escapedCategory}">
-                    <span class="meal-name">${escapedMealName}</span>
+                    <div class="meal-header">
+                        <span class="meal-name">${escapedMealName}</span>
+                        <div class="meal-actions">
+                            <button class="favorite-btn ${isFavorite ? 'favorited' : ''}" 
+                                    onclick="event.stopPropagation(); mealManager.toggleFavorite('${escapedMealName}')" 
+                                    title="${isFavorite ? 'お気に入りから削除' : 'お気に入りに追加'}"
+                                    aria-label="${isFavorite ? 'お気に入りから削除' : 'お気に入りに追加'}">
+                                ${isFavorite ? '⭐' : '☆'}
+                            </button>
+                            <button class="delete-btn" 
+                                    onclick="event.stopPropagation(); mealManager.deleteMeal('${day}', '${mealType}')" 
+                                    title="削除"
+                                    aria-label="${escapedMealName}を削除">×</button>
+                        </div>
+                    </div>
                     <span class="meal-category">${escapedCategory}</span>
-                    <button class="delete-btn" 
-                            onclick="mealManager.deleteMeal('${day}', '${mealType}')" 
-                            title="削除"
-                            aria-label="${escapedMealName}を削除">×</button>
                 </div>
             `;
         } else {
@@ -280,10 +366,20 @@ class MealPlanManager {
                      tabindex="0" 
                      role="button" 
                      aria-label="クリックして${day}の夕食を入力">
-                    クリックして入力
+                    <span class="empty-text">クリックして入力</span>
+                    <span class="empty-hint">料理名を入力してください</span>
                 </div>
             `;
         }
+    }
+
+    toggleFavorite(mealName) {
+        if (this.favorites.includes(mealName)) {
+            this.removeFromFavorites(mealName);
+        } else {
+            this.addToFavorites(mealName);
+        }
+        this.renderMeals(); // UI更新
     }
 
     renderMeals() {
@@ -298,7 +394,9 @@ class MealPlanManager {
     }
 
     saveToStorage() {
+        // 旧形式との互換性を保ちつつ、週別保存に移行
         this.safeSetToStorage('mealPlan', this.meals);
+        this.saveMealsForCurrentWeek();
     }
 
     saveHistoryToStorage() {
@@ -491,12 +589,7 @@ class MealPlanManager {
 
     updateWeekDates() {
         const today = new Date();
-        const currentDay = today.getDay();
-        const monday = new Date(today);
-        
-        // 月曜日を基準にする（日曜日は0、月曜日は1）
-        const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-        monday.setDate(today.getDate() + daysToMonday);
+        const monday = this.getMondayOfWeek(today, this.currentWeekOffset);
         
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
@@ -526,7 +619,27 @@ class MealPlanManager {
             const endMonth = sunday.getMonth() + 1;
             const endDate = sunday.getDate();
             
-            weekDatesElement.textContent = `${startMonth}/${startDate} - ${endMonth}/${endDate}`;
+            let weekLabel = `${startMonth}/${startDate} - ${endMonth}/${endDate}`;
+            
+            if (this.currentWeekOffset === 0) {
+                weekLabel += ' (今週)';
+            } else if (this.currentWeekOffset === -1) {
+                weekLabel += ' (先週)';
+            } else if (this.currentWeekOffset === 1) {
+                weekLabel += ' (来週)';
+            } else if (this.currentWeekOffset < 0) {
+                weekLabel += ` (${Math.abs(this.currentWeekOffset)}週間前)`;
+            } else {
+                weekLabel += ` (${this.currentWeekOffset}週間後)`;
+            }
+            
+            weekDatesElement.textContent = weekLabel;
+        }
+
+        // ナビゲーションボタンの状態更新
+        const currentWeekBtn = document.getElementById('current-week-btn');
+        if (currentWeekBtn) {
+            currentWeekBtn.style.display = this.currentWeekOffset === 0 ? 'none' : 'inline-block';
         }
     }
 
@@ -535,6 +648,7 @@ class MealPlanManager {
         this.meals = this.safeGetFromStorage('mealPlan', {});
         this.history = this.safeGetFromStorage('mealPlanHistory', []);
         this.shoppingList = this.safeGetFromStorage('shoppingList', []);
+        this.favorites = this.safeGetFromStorage('favorites', []);
         
         // データの整合性チェック
         if (!Array.isArray(this.history)) {
@@ -545,6 +659,9 @@ class MealPlanManager {
         }
         if (typeof this.meals !== 'object' || this.meals === null) {
             this.meals = {};
+        }
+        if (typeof this.favorites !== 'object' || this.favorites === null) {
+            this.favorites = [];
         }
     }
 
@@ -814,6 +931,295 @@ class MealPlanManager {
         };
         return colors[category] || colors['その他'];
     }
+
+    // 週切り替え機能
+    changeWeek(direction) {
+        this.currentWeekOffset += direction;
+        this.updateWeekDates();
+        this.loadMealsForCurrentWeek();
+        this.renderMeals();
+        
+        const action = direction > 0 ? '次週' : '先週';
+        this.showSuccessMessage(`${action}に切り替えました`);
+    }
+
+    goToCurrentWeek() {
+        this.currentWeekOffset = 0;
+        this.updateWeekDates();
+        this.loadMealsForCurrentWeek();
+        this.renderMeals();
+        this.showSuccessMessage('今週に戻りました');
+    }
+
+    getWeekKey() {
+        const today = new Date();
+        const monday = this.getMondayOfWeek(today, this.currentWeekOffset);
+        return `week-${monday.getFullYear()}-${monday.getMonth()}-${monday.getDate()}`;
+    }
+
+    getMondayOfWeek(date, weekOffset = 0) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(d.setDate(diff));
+        monday.setDate(monday.getDate() + (weekOffset * 7));
+        return monday;
+    }
+
+    loadMealsForCurrentWeek() {
+        const weekKey = this.getWeekKey();
+        const weekData = this.safeGetFromStorage(`meals-${weekKey}`, {});
+        this.meals = weekData;
+    }
+
+    saveMealsForCurrentWeek() {
+        const weekKey = this.getWeekKey();
+        this.safeSetToStorage(`meals-${weekKey}`, this.meals);
+    }
+
+    // ダークモード機能
+    initDarkMode() {
+        this.darkMode = this.safeGetFromStorage('darkMode', false);
+        this.applyDarkMode();
+    }
+
+    toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+        this.safeSetToStorage('darkMode', this.darkMode);
+        this.applyDarkMode();
+        
+        const message = this.darkMode ? 'ダークモードを有効にしました' : 'ライトモードに戻しました';
+        this.showSuccessMessage(message);
+    }
+
+    applyDarkMode() {
+        document.body.classList.toggle('dark-mode', this.darkMode);
+        const toggleBtn = document.getElementById('dark-mode-toggle');
+        if (toggleBtn) {
+            toggleBtn.textContent = this.darkMode ? '☀️' : '🌙';
+            toggleBtn.setAttribute('aria-label', this.darkMode ? 'ライトモードに切り替え' : 'ダークモードに切り替え');
+        }
+    }
+
+    // お気に入り料理機能
+    addToFavorites(mealName) {
+        if (!this.favorites.includes(mealName)) {
+            this.favorites.push(mealName);
+            this.safeSetToStorage('favorites', this.favorites);
+            this.renderFavorites();
+            this.showSuccessMessage(`${mealName}をお気に入りに追加しました`);
+        }
+    }
+
+    removeFromFavorites(mealName) {
+        this.favorites = this.favorites.filter(fav => fav !== mealName);
+        this.safeSetToStorage('favorites', this.favorites);
+        this.renderFavorites();
+        this.showSuccessMessage(`${mealName}をお気に入りから削除しました`);
+    }
+
+    renderFavorites() {
+        const favoritesContainer = document.getElementById('favorites-list');
+        if (!favoritesContainer) return;
+
+        if (this.favorites.length === 0) {
+            favoritesContainer.innerHTML = '<div class="no-favorites">お気に入りの料理はありません</div>';
+            return;
+        }
+
+        const favoritesHTML = this.favorites.map(meal => {
+            const escapedMeal = this.escapeHtml(meal);
+            return `
+                <div class="favorite-item" 
+                     onclick="mealManager.addMealFromFavorite('${escapedMeal}')"
+                     title="クリックして献立に追加">
+                    <span class="favorite-name">${escapedMeal}</span>
+                    <button class="remove-favorite-btn" 
+                            onclick="event.stopPropagation(); mealManager.removeFromFavorites('${escapedMeal}')"
+                            aria-label="${escapedMeal}をお気に入りから削除">×</button>
+                </div>
+            `;
+        }).join('');
+
+        favoritesContainer.innerHTML = favoritesHTML;
+    }
+
+    addMealFromFavorite(mealName) {
+        // 空いている曜日を探して追加
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        for (const day of days) {
+            const mealKey = `${day}-dinner`;
+            if (!this.meals[mealKey]) {
+                this.meals[mealKey] = mealName;
+                this.saveToStorage();
+                this.renderMeals();
+                this.showSuccessMessage(`${mealName}を${this.getDayName(day)}曜日に追加しました`);
+                return;
+            }
+        }
+        
+        this.showErrorMessage('すべての曜日に料理が設定されています');
+    }
+
+    // 材料自動生成機能
+    autoGenerateIngredients() {
+        const currentMeals = Object.values(this.meals);
+        const ingredients = new Set();
+
+        currentMeals.forEach(meal => {
+            if (this.mealIngredients[meal]) {
+                this.mealIngredients[meal].forEach(ingredient => {
+                    ingredients.add(ingredient);
+                });
+            }
+        });
+
+        if (ingredients.size === 0) {
+            this.showErrorMessage('献立から材料を生成できませんでした');
+            return;
+        }
+
+        // 既存の買い物リストに追加（重複チェック）
+        let addedCount = 0;
+        ingredients.forEach(ingredient => {
+            const exists = this.shoppingList.some(item => 
+                item.text.toLowerCase() === ingredient.toLowerCase()
+            );
+            
+            if (!exists) {
+                const newItem = {
+                    id: Date.now() + Math.random(),
+                    text: ingredient,
+                    completed: false,
+                    createdAt: new Date().toISOString(),
+                    autoGenerated: true
+                };
+                this.shoppingList.push(newItem);
+                addedCount++;
+            }
+        });
+
+        this.saveShoppingToStorage();
+        this.renderShoppingList();
+        
+        if (addedCount > 0) {
+            this.showSuccessMessage(`${addedCount}個の材料を買い物リストに追加しました`);
+        } else {
+            this.showSuccessMessage('必要な材料はすでに買い物リストにあります');
+        }
+    }
+
+    // 検索機能
+    initSearch() {
+        const searchInput = document.getElementById('meal-search');
+        if (!searchInput) return;
+
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.performSearch(e.target.value);
+            }, 300);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.target.value = '';
+                this.clearSearch();
+            }
+        });
+    }
+
+    performSearch(query) {
+        const searchResults = document.getElementById('search-results');
+        if (!searchResults) return;
+
+        if (!query.trim()) {
+            this.clearSearch();
+            return;
+        }
+
+        const allMeals = new Set();
+        Object.values(this.categories).flat().forEach(meal => allMeals.add(meal));
+        this.favorites.forEach(meal => allMeals.add(meal));
+
+        const results = Array.from(allMeals).filter(meal =>
+            meal.toLowerCase().includes(query.toLowerCase())
+        );
+
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="no-results">検索結果が見つかりません</div>';
+            searchResults.style.display = 'block';
+            return;
+        }
+
+        const resultsHTML = results.slice(0, 8).map(meal => {
+            const escapedMeal = this.escapeHtml(meal);
+            const isFavorite = this.favorites.includes(meal);
+            const category = this.getMealCategory(meal);
+            
+            return `
+                <div class="search-result-item" 
+                     onclick="mealManager.addMealFromSearch('${escapedMeal}')"
+                     title="クリックして献立に追加">
+                    <span class="search-meal-name">${escapedMeal}</span>
+                    <span class="search-meal-category">${category}</span>
+                    ${isFavorite ? '<span class="favorite-star">⭐</span>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        searchResults.innerHTML = resultsHTML;
+        searchResults.style.display = 'block';
+    }
+
+    addMealFromSearch(mealName) {
+        this.addMealFromFavorite(mealName); // 同じロジックを使用
+        this.clearSearch();
+        
+        // 検索入力をクリア
+        const searchInput = document.getElementById('meal-search');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+    }
+
+    clearSearch() {
+        const searchResults = document.getElementById('search-results');
+        if (searchResults) {
+            searchResults.style.display = 'none';
+            searchResults.innerHTML = '';
+        }
+    }
+
+    getMealCategory(mealName) {
+        for (const [category, meals] of Object.entries(this.categories)) {
+            if (meals.includes(mealName)) {
+                return category;
+            }
+        }
+        return 'その他';
+    }
+
+    getDayName(dayCode) {
+        const dayNames = {
+            'monday': '月',
+            'tuesday': '火',
+            'wednesday': '水',
+            'thursday': '木',
+            'friday': '金',
+            'saturday': '土',
+            'sunday': '日'
+        };
+        return dayNames[dayCode] || dayCode;
+    }
 }
 
-const mealManager = new MealPlanManager();
+// グローバルインスタンス作成
+let mealManager;
+
+document.addEventListener('DOMContentLoaded', () => {
+    mealManager = new MealPlanManager();
+});

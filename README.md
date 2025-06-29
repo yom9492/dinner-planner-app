@@ -1,155 +1,237 @@
 # 🌸 1週間夕食管理アプリ
 
-シンプルで使いやすい夕食管理アプリです。1週間分の夕食メニューを簡単に管理できます。
+[![PWA](https://img.shields.io/badge/PWA-ready-brightgreen.svg)](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://www.w3.org/html/)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://www.w3.org/Style/CSS/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/docs/Web/JavaScript)
 
-## ✨ 特徴
+モダンなPWA技術を使用した、1週間の夕食管理Webアプリケーション。週間献立の管理、買い物リスト作成、お気に入り料理の保存など、日常の食事計画を効率化する機能を提供します。
 
-- 📱 **スマホ対応**: PWA技術でアプリのようにインストール可能
-- 🎨 **ピンクデザイン**: 可愛らしいピンク系のデザイン
-- 👆 **簡単操作**: 各曜日をタップして直接入力
-- 💾 **データ保存**: ブラウザに自動保存（オフラインでも動作）
-- 🚀 **高速**: 軽量で快適な動作
+## 🚀 主な機能
 
-## 📱 スマホでの使用手順
+### 📱 核心機能
+- **週間献立管理**: 月曜日から日曜日まで7日間の夕食管理
+- **週切り替え**: 前週・来週の献立表示とナビゲーション
+- **オフライン対応**: Service Workerによる完全オフライン動作
+- **PWAインストール**: スマートフォンやデスクトップにアプリとしてインストール可能
 
-### ステップ 1: アプリを公開する
+### 🎯 便利機能
+- **お気に入り料理**: よく作る料理をワンクリックで献立に追加
+- **料理検索**: リアルタイム検索で素早く料理を見つける
+- **材料自動生成**: 献立から必要な材料を自動で買い物リストに追加
+- **買い物リスト**: チェックボックス付きの使いやすい買い物リスト
+- **履歴管理**: 過去の献立を保存・復元（最大10件）
+- **CSVエクスポート**: 献立データをCSVファイルとして出力
 
-#### 方法A: GitHub Pages（推奨・無料）
+### 🎨 UI/UX機能
+- **ダークモード**: 目に優しいダークテーマ切り替え
+- **ドラッグ&ドロップ**: 直感的な料理の移動操作
+- **キーボードショートカット**: 効率的なキーボード操作
+- **完全アクセシビリティ対応**: スクリーンリーダー、キーボードナビゲーション
+- **レスポンシブデザイン**: スマートフォンからデスクトップまで最適化
 
-1. **GitHubアカウントを作成**
-   - [GitHub](https://github.com)にアクセス
-   - 無料アカウントを作成
+## 🛠️ 技術仕様
 
-2. **新しいリポジトリを作成**
-   - 「New repository」をクリック
-   - リポジトリ名を入力（例: `dinner-planner`）
-   - 「Public」を選択
-   - 「Create repository」をクリック
+### フロントエンド技術
+- **HTML5**: セマンティックマークアップ、ARIA属性対応
+- **CSS3**: Grid Layout、Flexbox、CSS Variables、アニメーション
+- **JavaScript (ES6+)**: モジュールクラス設計、非同期処理、イベント管理
 
-3. **ファイルをアップロード**
-   - 「uploading an existing file」をクリック
-   - 以下のファイルをドラッグ&ドロップ：
-     - `index.html`
-     - `style.css`
-     - `script.js`
-     - `manifest.json`
-     - `sw.js`
-   - 「Commit changes」をクリック
+### PWA技術
+- **Service Worker**: オフラインキャッシュ、バックグラウンド同期
+- **Web App Manifest**: アプリメタデータ、インストール対応
+- **LocalStorage**: クライアントサイドデータ永続化
 
-4. **GitHub Pagesを有効化**
-   - リポジトリの「Settings」タブを開く
-   - 左メニューから「Pages」を選択
-   - Source を「Deploy from a branch」に設定
-   - Branch を「main」に設定
-   - 「Save」をクリック
+### セキュリティ対策
+- **XSS防止**: HTMLエスケープ処理
+- **CSP準拠**: Content Security Policy対応
+- **データ整合性**: 入力値検証、エラーハンドリング
 
-5. **アプリのURLを取得**
-   - 数分後、以下のURLでアクセス可能：
-   - `https://yom9492.github.io/dinner-planner-app`
+### アクセシビリティ
+- **WCAG 2.1 AA準拠**: スクリーンリーダー対応
+- **キーボードナビゲーション**: 完全キーボード操作可能
+- **フォーカス管理**: 適切なフォーカスインジケーター
+- **セマンティックHTML**: 適切なHTML要素とロール
 
-#### 方法B: Netlify（簡単・無料）
+## 📁 ファイル構成
 
-1. **Netlifyにアクセス**
-   - [Netlify](https://netlify.com)でアカウント作成
-
-2. **ファイルをアップロード**
-   - 「Sites」ページで「Add new site」→「Deploy manually」
-   - すべてのファイルをZIPにまとめてドラッグ&ドロップ
-   - 自動的にURLが生成される
-
-### ステップ 2: スマホにインストール
-
-#### iPhone（Safari）
-
-1. **アプリにアクセス**
-   - Safariで公開されたURLを開く
-
-2. **ホーム画面に追加**
-   - 画面下部の共有ボタン（□↑）をタップ
-   - 「ホーム画面に追加」を選択
-   - アプリ名を確認して「追加」をタップ
-
-3. **アプリとして使用**
-   - ホーム画面にアイコンが追加される
-   - タップするとアプリのように起動
-
-#### Android（Chrome）
-
-1. **アプリにアクセス**
-   - Chromeで公開されたURLを開く
-
-2. **インストールプロンプト**
-   - 自動的に「アプリをインストール」が表示される場合は「インストール」をタップ
-
-3. **手動でインストール**
-   - 右上の「⋮」メニューをタップ
-   - 「アプリをインストール」または「ホーム画面に追加」を選択
-   - 「インストール」をタップ
-
-4. **アプリとして使用**
-   - アプリドロワーまたはホーム画面にアイコンが追加される
-
-### ステップ 3: 使い方
-
-1. **夕食の入力**
-   - 各曜日の欄をタップ
-   - 料理名を入力
-   - Enterキーまたは他の場所をタップで保存
-
-2. **夕食の削除**
-   - 入力済みの料理の「×」ボタンをタップ
-
-3. **全削除**
-   - 画面下部の「全てクリア」ボタンで一括削除
-
-## 🔧 トラブルシューティング
-
-### アプリがインストールできない
-
-- **iPhone**: iOS 11.3以降のSafariが必要
-- **Android**: Chrome 76以降が必要
-- プライベートブラウジングモードでは利用不可
-
-### データが消える
-
-- ブラウザのデータを削除すると消える可能性があります
-- 定期的にスクリーンショットでバックアップを取ることをお勧めします
-
-### 動作が重い
-
-- ブラウザを再起動してみてください
-- 他のタブを閉じてメモリを解放してください
-
-## 🛠️ カスタマイズ
-
-### 色の変更
-
-`style.css`の以下の部分を編集：
-
-```css
-/* メインカラー */
-background: linear-gradient(135deg, #fbb6ce 0%, #f06292 100%);
-
-/* アクセントカラー */
-color: #e91e63;
+```
+dinner-planner-app/
+├── index.html          # メインHTML（セマンティックマークアップ）
+├── style.css           # スタイルシート（ダークモード、レスポンシブ対応）
+├── script.js           # メインロジック（ESクラス設計）
+├── manifest.json       # PWAマニフェスト
+├── sw.js              # Service Worker
+├── README.md          # 開発者向けドキュメント（このファイル）
+├── 手順書.md           # ユーザー向け使い方ガイド
+└── .gitignore         # Git除外設定
 ```
 
-### 曜日の変更
+## 🔧 開発・デプロイ
 
-`script.js`の以下の部分を編集：
+### ローカル開発
+```bash
+# HTTPサーバーが必要（Service Worker制約）
+# Python 3の場合
+python -m http.server 8000
 
+# Node.jsの場合  
+npx serve .
+
+# ブラウザで http://localhost:8000 にアクセス
+```
+
+### デプロイ方法
+
+#### GitHub Pages（推奨）
+1. GitHubリポジトリを作成
+2. ファイルをアップロード
+3. Settings → Pages → Source: Deploy from branch → main
+4. 数分でアクセス可能: `https://username.github.io/repository-name`
+
+#### Netlify
+1. [Netlify](https://netlify.com) でアカウント作成
+2. 「Deploy manually」でファイルをZIPアップロード
+3. 自動的にURLが生成される
+
+#### Vercel
+```bash
+npx vercel --prod
+```
+
+## 💾 データ構造
+
+### LocalStorage キー
+- `mealPlan`: 基本献立データ
+- `meals-week-YYYY-M-D`: 週別献立データ
+- `favorites`: お気に入り料理配列
+- `mealPlanHistory`: 履歴データ（最大10件）
+- `shoppingList`: 買い物リストデータ
+- `darkMode`: ダークモード設定
+
+### データ形式例
 ```javascript
-const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+// 献立データ
+{
+  "monday-dinner": "カレーライス",
+  "tuesday-dinner": "ハンバーグ"
+}
+
+// お気に入り料理
+["カレーライス", "ハンバーグ", "パスタ"]
+
+// 買い物リスト
+[
+  {
+    "id": 1234567890,
+    "text": "牛肉",
+    "completed": false,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "autoGenerated": true
+  }
+]
 ```
+
+## 🎮 キーボードショートカット
+
+| ショートカット | 機能 |
+|---|---|
+| `Ctrl + S` | 献立保存 |
+| `Ctrl + E` | CSVエクスポート |
+| `Ctrl + D` | ダークモード切り替え |
+| `Ctrl + ←` | 前週に移動 |
+| `Ctrl + →` | 次週に移動 |
+| `↑↓` | 候補選択ナビゲーション |
+| `Enter` | 選択確定 |
+| `Escape` | 編集キャンセル |
+
+## 🌐 ブラウザ対応
+
+### 必要要件
+- **Service Worker**: Chrome 45+, Firefox 44+, Safari 11.1+
+- **PWA**: Chrome 70+, Edge 17+, Firefox 58+, Safari 13+
+- **CSS Grid**: IE 10+（限定的）, Chrome 57+, Firefox 52+
+
+### 推奨環境
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## 🧪 テスト
+
+### 機能テスト
+- [ ] 献立追加・編集・削除
+- [ ] 週切り替えナビゲーション
+- [ ] お気に入り料理管理
+- [ ] 買い物リスト操作
+- [ ] CSVエクスポート
+- [ ] ダークモード切り替え
+- [ ] PWAインストール
+
+### アクセシビリティテスト
+- [ ] スクリーンリーダー（NVDA/JAWS）
+- [ ] キーボードナビゲーション
+- [ ] フォーカス表示
+- [ ] コントラスト比（4.5:1以上）
+
+### パフォーマンステスト
+- [ ] Lighthouse Score 90+
+- [ ] Core Web Vitals合格
+- [ ] オフライン動作確認
+
+## 🛡️ セキュリティ考慮事項
+
+### 実装済み対策
+- HTMLエスケープによるXSS防止
+- 入力値検証とサニタイゼーション
+- ローカルストレージの容量制限対応
+- エラーハンドリングの充実
+
+### 追加推奨事項
+- CSP（Content Security Policy）ヘッダー設定
+- HTTPS必須運用
+- 定期的な依存関係更新
+
+## 📈 今後の拡張予定
+
+### Phase 2
+- [ ] 栄養計算機能
+- [ ] 料理画像対応
+- [ ] レシピ保存機能
+- [ ] 食材期限管理
+
+### Phase 3
+- [ ] クラウド同期（Firebase）
+- [ ] 複数デバイス対応
+- [ ] 家族アカウント共有
+- [ ] 外部レシピAPI連携
 
 ## 📄 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。自由に改変・配布できます。
+MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照
 
-## 🤝 サポート
+## 🤝 コントリビューション
 
-質問や問題がある場合は、GitHubのIssuesページで報告してください。
+1. Fork this repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+### 開発ガイドライン
+- ESLint設定に従ったコーディング
+- アクセシビリティテスト必須
+- モバイルファーストデザイン
+- 国際化（i18n）対応準備
+
+## 📞 サポート
+
+- **バグレポート**: GitHub Issues
+- **機能リクエスト**: GitHub Discussions
+- **セキュリティ報告**: プライベートメッセージ
 
 ---
 
-**楽しい献立管理を！** 🍽️✨
+**Happy Cooking! 🍽️**
