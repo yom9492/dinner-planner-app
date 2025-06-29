@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="夕食管理">
+    <meta name="theme-color" content="#e91e63">
+    <title>1週間夕食管理アプリ</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌸 1週間夕食管理</h1>
+        </header>
+        
+        <main>
+            
+            <div class="meal-plan-section">
+                <h2>今週の夕食</h2>
+                <div class="meal-grid" id="meal-grid">
+                    <div class="day-column" data-day="monday">
+                        <h3>月曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('monday', 'dinner')">
+                                <div class="meal-content" id="monday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="tuesday">
+                        <h3>火曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('tuesday', 'dinner')">
+                                <div class="meal-content" id="tuesday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="wednesday">
+                        <h3>水曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('wednesday', 'dinner')">
+                                <div class="meal-content" id="wednesday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="thursday">
+                        <h3>木曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('thursday', 'dinner')">
+                                <div class="meal-content" id="thursday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="friday">
+                        <h3>金曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('friday', 'dinner')">
+                                <div class="meal-content" id="friday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="saturday">
+                        <h3>土曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('saturday', 'dinner')">
+                                <div class="meal-content" id="saturday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="day-column" data-day="sunday">
+                        <h3>日曜日</h3>
+                        <div class="meals">
+                            <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('sunday', 'dinner')">
+                                <div class="meal-content" id="sunday-dinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button id="clear-all-btn" class="clear-btn">全てクリア</button>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>

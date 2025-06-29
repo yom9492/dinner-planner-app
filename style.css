@@ -1,0 +1,319 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #fbb6ce 0%, #f06292 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    color: white;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.add-meal-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.add-meal-section h2 {
+    margin-bottom: 20px;
+    color: #ad1457;
+    font-size: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #ad1457;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #f8bbd9;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: #e91e63;
+    box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+button {
+    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(233, 30, 99, 0.3);
+}
+
+.meal-plan-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.meal-plan-section h2 {
+    margin-bottom: 20px;
+    color: #ad1457;
+    font-size: 1.5rem;
+}
+
+.meal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.day-column {
+    background: #fce4ec;
+    border-radius: 12px;
+    padding: 15px;
+    border: 2px solid #f8bbd9;
+}
+
+.day-column h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #e91e63;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.meal-slot {
+    margin-bottom: 15px;
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #f8bbd9;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.meal-slot:hover,
+.meal-slot:active {
+    background: #fce4ec;
+}
+
+.meal-slot:last-child {
+    margin-bottom: 0;
+}
+
+.meal-slot h4 {
+    font-size: 0.9rem;
+    color: #ad1457;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meal-content {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.meal-item {
+    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+    width: 100%;
+    justify-content: space-between;
+}
+
+.meal-item .meal-name {
+    flex-grow: 1;
+}
+
+.meal-item .delete-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s ease;
+}
+
+.meal-item .delete-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: none;
+    box-shadow: none;
+}
+
+.actions {
+    text-align: center;
+}
+
+.clear-btn {
+    background: linear-gradient(135deg, #f06292 0%, #e91e63 100%);
+    padding: 10px 20px;
+}
+
+.clear-btn:hover {
+    box-shadow: 0 5px 15px rgba(240, 98, 146, 0.3);
+}
+
+.empty-slot {
+    color: #c2185b;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.inline-edit {
+    width: 100%;
+    border: 2px solid #e91e63;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    outline: none;
+    background: white;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    header {
+        margin-bottom: 20px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .meal-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .meal-plan-section {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .day-column {
+        padding: 15px;
+    }
+    
+    .meal-slot {
+        padding: 15px;
+        min-height: 60px;
+        font-size: 1rem;
+    }
+    
+    .inline-edit {
+        font-size: 16px;
+        padding: 12px;
+    }
+    
+    .clear-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+    
+    header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .day-column {
+        padding: 12px;
+    }
+    
+    .day-column h3 {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+    
+    .meal-slot {
+        padding: 12px;
+        min-height: 55px;
+    }
+    
+    .meal-item {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    
+    .meal-item .delete-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+    
+    .empty-slot {
+        font-size: 0.85rem;
+    }
+    
+    .inline-edit {
+        font-size: 16px;
+        padding: 10px;
+    }
+}
