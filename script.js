@@ -4,6 +4,7 @@ class MealPlanManager {
         this.history = [];
         this.shoppingList = [];
         this.draggedElement = null;
+        this.currentSuggestionIndex = -1; // 候補選択用
         this.categories = {
             '和食': ['味噌汁', '煮物', 'すき焼き', '親子丼', '天ぷら', '刺身', '焼き魚', '肉じゃが', 'カレー', '丼もの'],
             '洋食': ['パスタ', 'ピザ', 'ハンバーグ', 'ステーキ', 'サラダ', 'スープ', 'グラタン', 'リゾット', 'オムライス', 'サンドイッチ'],
@@ -11,6 +12,58 @@ class MealPlanManager {
             'その他': ['鍋', 'バーベキュー', 'お弁当', 'デリバリー', '外食']
         };
         this.init();
+    }
+
+    // セキュリティ: HTMLエスケープ関数を追加
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // エラーハンドリングを追加したlocalStorage操作
+    safeGetFromStorage(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.warn(`Failed to load ${key} from storage:`, error);
+            return defaultValue;
+        }
+    }
+
+    safeSetToStorage(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (error) {
+            console.error(`Failed to save ${key} to storage:`, error);
+            this.showErrorMessage('データの保存に失敗しました。ブラウザの容量を確認してください。');
+            return false;
+        }
+    }
+
+    showErrorMessage(message) {
+        // エラーメッセージ表示の改善
+        const toast = document.createElement('div');
+        toast.className = 'error-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 5000);
     }
 
     init() {
@@ -51,27 +104,116 @@ class MealPlanManager {
                 this.addShoppingItem();
             }
         });
+
+        // 全体的なキーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        this.saveMealPlan();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        this.exportToCSV();
+                        break;
+                }
+            }
+        });
     }
 
     startEdit(day, mealType) {
         const mealContent = document.getElementById(`${day}-${mealType}`);
         const currentMeal = this.meals[`${day}-${mealType}`] || '';
         
+        // セキュリティ: HTMLエスケープ
+        const escapedMeal = this.escapeHtml(currentMeal);
+        
         mealContent.innerHTML = `
             <div class="edit-container">
-                <input type="text" class="inline-edit" value="${currentMeal}" 
+                <input type="text" 
+                       class="inline-edit" 
+                       value="${escapedMeal}" 
                        placeholder="料理名を入力" 
-                       onblur="mealManager.saveEdit('${day}', '${mealType}', this.value)"
-                       onkeypress="if(event.key==='Enter') this.blur()"
-                       oninput="mealManager.showSuggestions(this, '${day}', '${mealType}')"
+                       aria-label="${day}の夕食を入力"
+                       autocomplete="off"
                        autofocus>
-                <div class="suggestions" id="suggestions-${day}-${mealType}"></div>
+                <div class="suggestions" 
+                     id="suggestions-${day}-${mealType}" 
+                     role="listbox" 
+                     aria-label="料理の候補"></div>
             </div>
         `;
         
         const input = mealContent.querySelector('.inline-edit');
         input.focus();
         input.select();
+
+        // イベントリスナーの追加（改善）
+        let timeoutId;
+        
+        input.addEventListener('input', (e) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                this.showSuggestions(e.target, day, mealType);
+            }, 150); // デバウンス処理
+        });
+
+        input.addEventListener('blur', (e) => {
+            // 候補選択時のぼかしを遅延処理
+            setTimeout(() => {
+                this.saveEdit(day, mealType, e.target.value);
+            }, 200);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            this.handleSuggestionKeyboard(e, day, mealType);
+        });
+    }
+
+    // 候補選択のキーボード操作を改善
+    handleSuggestionKeyboard(e, day, mealType) {
+        const suggestionContainer = document.getElementById(`suggestions-${day}-${mealType}`);
+        const suggestions = suggestionContainer.querySelectorAll('.suggestion-item');
+        
+        if (suggestions.length === 0) return;
+
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                this.currentSuggestionIndex = Math.min(this.currentSuggestionIndex + 1, suggestions.length - 1);
+                this.updateSuggestionSelection(suggestions);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                this.currentSuggestionIndex = Math.max(this.currentSuggestionIndex - 1, -1);
+                this.updateSuggestionSelection(suggestions);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (this.currentSuggestionIndex >= 0) {
+                    const selectedSuggestion = suggestions[this.currentSuggestionIndex];
+                    this.selectSuggestion(selectedSuggestion.textContent, day, mealType);
+                } else {
+                    e.target.blur();
+                }
+                break;
+            case 'Escape':
+                this.currentSuggestionIndex = -1;
+                suggestionContainer.innerHTML = '';
+                break;
+        }
+    }
+
+    updateSuggestionSelection(suggestions) {
+        suggestions.forEach((suggestion, index) => {
+            suggestion.classList.toggle('selected', index === this.currentSuggestionIndex);
+            if (index === this.currentSuggestionIndex) {
+                suggestion.setAttribute('aria-selected', 'true');
+            } else {
+                suggestion.removeAttribute('aria-selected');
+            }
+        });
     }
     
     saveEdit(day, mealType, value) {
@@ -96,7 +238,7 @@ class MealPlanManager {
     }
 
     clearAllMeals() {
-        if (confirm('全ての夕食を削除しますか？')) {
+        if (confirm('すべての夕食を削除しますか？')) {
             this.meals = {};
             this.saveToStorage();
             this.renderMeals();
@@ -110,15 +252,37 @@ class MealPlanManager {
             const category = this.getMealCategory(mealName);
             const categoryColor = this.getCategoryColor(category);
             
+            // セキュリティ: HTMLエスケープ
+            const escapedMealName = this.escapeHtml(mealName);
+            const escapedCategory = this.escapeHtml(category);
+            
             mealContent.innerHTML = `
-                <div class="meal-item" draggable="true" data-day="${day}" data-meal="${mealType}" data-name="${mealName}" style="background: ${categoryColor}">
-                    <span class="meal-name">${mealName}</span>
-                    <span class="meal-category">${category}</span>
-                    <button class="delete-btn" onclick="mealManager.deleteMeal('${day}', '${mealType}')" title="削除">×</button>
+                <div class="meal-item" 
+                     draggable="true" 
+                     data-day="${day}" 
+                     data-meal="${mealType}" 
+                     data-name="${escapedMealName}" 
+                     style="background: ${categoryColor}"
+                     tabindex="0"
+                     role="button"
+                     aria-label="${escapedMealName}、${escapedCategory}">
+                    <span class="meal-name">${escapedMealName}</span>
+                    <span class="meal-category">${escapedCategory}</span>
+                    <button class="delete-btn" 
+                            onclick="mealManager.deleteMeal('${day}', '${mealType}')" 
+                            title="削除"
+                            aria-label="${escapedMealName}を削除">×</button>
                 </div>
             `;
         } else {
-            mealContent.innerHTML = '<div class="empty-slot">クリックして入力</div>';
+            mealContent.innerHTML = `
+                <div class="empty-slot" 
+                     tabindex="0" 
+                     role="button" 
+                     aria-label="クリックして${day}の夕食を入力">
+                    クリックして入力
+                </div>
+            `;
         }
     }
 
@@ -134,15 +298,15 @@ class MealPlanManager {
     }
 
     saveToStorage() {
-        localStorage.setItem('mealPlan', JSON.stringify(this.meals));
+        this.safeSetToStorage('mealPlan', this.meals);
     }
 
     saveHistoryToStorage() {
-        localStorage.setItem('mealPlanHistory', JSON.stringify(this.history));
+        this.safeSetToStorage('mealPlanHistory', this.history);
     }
 
     saveShoppingToStorage() {
-        localStorage.setItem('shoppingList', JSON.stringify(this.shoppingList));
+        this.safeSetToStorage('shoppingList', this.shoppingList);
     }
 
     addShoppingItem() {
@@ -153,13 +317,15 @@ class MealPlanManager {
             const newItem = {
                 id: Date.now(),
                 text: itemText,
-                completed: false
+                completed: false,
+                createdAt: new Date().toISOString() // 作成日時を追加
             };
             
             this.shoppingList.push(newItem);
             this.saveShoppingToStorage();
             this.renderShoppingList();
             input.value = '';
+            input.focus(); // フォーカスを戻す
         }
     }
 
@@ -167,6 +333,7 @@ class MealPlanManager {
         const item = this.shoppingList.find(item => item.id === itemId);
         if (item) {
             item.completed = !item.completed;
+            item.completedAt = item.completed ? new Date().toISOString() : null;
             this.saveShoppingToStorage();
             this.renderShoppingList();
         }
@@ -186,19 +353,27 @@ class MealPlanManager {
             return;
         }
         
-        const listHTML = this.shoppingList.map(item => `
-            <li class="shopping-item ${item.completed ? 'completed' : ''}">
-                <label class="shopping-checkbox">
-                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
-                           onchange="mealManager.toggleShoppingItem(${item.id})">
-                    <span class="checkmark"></span>
-                </label>
-                <span class="shopping-text">${item.text}</span>
-                <button class="delete-shopping-btn" 
-                        onclick="mealManager.deleteShoppingItem(${item.id})" 
-                        title="削除">×</button>
-            </li>
-        `).join('');
+        // セキュリティ: HTMLエスケープ
+        const listHTML = this.shoppingList.map(item => {
+            const escapedText = this.escapeHtml(item.text);
+            return `
+                <li class="shopping-item ${item.completed ? 'completed' : ''}"
+                    role="listitem">
+                    <label class="shopping-checkbox">
+                        <input type="checkbox" 
+                               ${item.completed ? 'checked' : ''} 
+                               onchange="mealManager.toggleShoppingItem(${item.id})"
+                               aria-label="${escapedText}を${item.completed ? '未完了に' : '完了に'}する">
+                        <span class="checkmark"></span>
+                    </label>
+                    <span class="shopping-text">${escapedText}</span>
+                    <button class="delete-shopping-btn" 
+                            onclick="mealManager.deleteShoppingItem(${item.id})" 
+                            title="削除"
+                            aria-label="${escapedText}を削除">×</button>
+                </li>
+            `;
+        }).join('');
         
         shoppingList.innerHTML = listHTML;
     }
@@ -262,22 +437,33 @@ class MealPlanManager {
             return;
         }
         
+        // セキュリティ: HTMLエスケープ
         const historyHTML = this.history.map(plan => {
             const mealEntries = Object.entries(plan.meals);
             const mealSummary = mealEntries.slice(0, 3).map(([key, value]) => {
                 const dayName = this.getDayName(key.split('-')[0]);
-                return `${dayName}: ${value}`;
+                const escapedValue = this.escapeHtml(value);
+                return `${dayName}: ${escapedValue}`;
             }).join('、');
             
             const moreMeals = mealEntries.length > 3 ? '...' : '';
+            const escapedDate = this.escapeHtml(plan.date);
             
             return `
-                <div class="history-item">
+                <div class="history-item" 
+                     role="group" 
+                     aria-label="${escapedDate}の献立">
                     <div class="history-header">
-                        <span class="history-date">${plan.date}</span>
+                        <span class="history-date">${escapedDate}</span>
                         <div class="history-actions">
-                            <button class="load-btn" onclick="mealManager.loadPlan(${plan.id})" title="読み込み">読み込み</button>
-                            <button class="delete-history-btn" onclick="mealManager.deletePlan(${plan.id})" title="削除">×</button>
+                            <button class="load-btn" 
+                                    onclick="mealManager.loadPlan(${plan.id})" 
+                                    title="読み込み"
+                                    aria-label="${escapedDate}の献立を読み込み">読み込み</button>
+                            <button class="delete-history-btn" 
+                                    onclick="mealManager.deletePlan(${plan.id})" 
+                                    title="削除"
+                                    aria-label="${escapedDate}の献立を削除">×</button>
                         </div>
                     </div>
                     <div class="history-content">
@@ -345,27 +531,34 @@ class MealPlanManager {
     }
 
     loadFromStorage() {
-        const stored = localStorage.getItem('mealPlan');
-        if (stored) {
-            this.meals = JSON.parse(stored);
-        }
+        // エラーハンドリングを追加
+        this.meals = this.safeGetFromStorage('mealPlan', {});
+        this.history = this.safeGetFromStorage('mealPlanHistory', []);
+        this.shoppingList = this.safeGetFromStorage('shoppingList', []);
         
-        const storedHistory = localStorage.getItem('mealPlanHistory');
-        if (storedHistory) {
-            this.history = JSON.parse(storedHistory);
+        // データの整合性チェック
+        if (!Array.isArray(this.history)) {
+            this.history = [];
         }
-        
-        const storedShopping = localStorage.getItem('shoppingList');
-        if (storedShopping) {
-            this.shoppingList = JSON.parse(storedShopping);
+        if (!Array.isArray(this.shoppingList)) {
+            this.shoppingList = [];
+        }
+        if (typeof this.meals !== 'object' || this.meals === null) {
+            this.meals = {};
         }
     }
 
     setupDragAndDrop() {
+        // 重複を避けるためイベントリスナーを一度だけ追加
+        if (this.dragAndDropInitialized) return;
+        this.dragAndDropInitialized = true;
+
         document.addEventListener('dragstart', (e) => {
             if (e.target.classList.contains('meal-item')) {
                 this.draggedElement = e.target;
                 e.target.style.opacity = '0.5';
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', e.target.outerHTML);
             }
         });
 
@@ -373,19 +566,31 @@ class MealPlanManager {
             if (e.target.classList.contains('meal-item')) {
                 e.target.style.opacity = '1';
                 this.draggedElement = null;
+                
+                // 全てのドロップゾーンのハイライトを削除
+                document.querySelectorAll('.meal-slot').forEach(slot => {
+                    slot.style.backgroundColor = '';
+                    slot.classList.remove('drag-over');
+                });
             }
         });
 
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (e.target.closest('.meal-slot')) {
-                e.target.closest('.meal-slot').style.backgroundColor = '#e3f2fd';
+            e.dataTransfer.dropEffect = 'move';
+            
+            const targetSlot = e.target.closest('.meal-slot');
+            if (targetSlot && this.draggedElement) {
+                targetSlot.style.backgroundColor = '#e3f2fd';
+                targetSlot.classList.add('drag-over');
             }
         });
 
         document.addEventListener('dragleave', (e) => {
-            if (e.target.closest('.meal-slot')) {
-                e.target.closest('.meal-slot').style.backgroundColor = '';
+            const targetSlot = e.target.closest('.meal-slot');
+            if (targetSlot && !targetSlot.contains(e.relatedTarget)) {
+                targetSlot.style.backgroundColor = '';
+                targetSlot.classList.remove('drag-over');
             }
         });
 
@@ -395,6 +600,7 @@ class MealPlanManager {
             
             if (targetSlot && this.draggedElement) {
                 targetSlot.style.backgroundColor = '';
+                targetSlot.classList.remove('drag-over');
                 
                 const sourceMealSlot = this.draggedElement.closest('.meal-slot');
                 const sourceDay = sourceMealSlot.closest('.day-column').dataset.day;
@@ -421,9 +627,77 @@ class MealPlanManager {
                     
                     this.saveToStorage();
                     this.renderMeals();
+                    
+                    // アクセシビリティ: 変更をアナウンス
+                    this.announceChange(`${draggedMealName}を${targetDay}に移動しました`);
                 }
             }
         });
+
+        // キーボードでのドラッグ&ドロップ代替
+        document.addEventListener('keydown', (e) => {
+            if (e.target.classList.contains('meal-item') && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                this.startKeyboardMove(e.target);
+            }
+        });
+    }
+
+    // アクセシビリティ: 変更をスクリーンリーダーにアナウンス
+    announceChange(message) {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.setAttribute('aria-atomic', 'true');
+        announcement.style.position = 'absolute';
+        announcement.style.left = '-10000px';
+        announcement.textContent = message;
+        
+        document.body.appendChild(announcement);
+        setTimeout(() => {
+            document.body.removeChild(announcement);
+        }, 1000);
+    }
+
+    // キーボードでの移動開始
+    startKeyboardMove(mealElement) {
+        // 実装は複雑になるため、シンプルな確認ダイアログで代用
+        const mealName = mealElement.dataset.name;
+        const currentDay = mealElement.closest('.day-column').dataset.day;
+        
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = {
+            'monday': '月曜日',
+            'tuesday': '火曜日', 
+            'wednesday': '水曜日',
+            'thursday': '木曜日',
+            'friday': '金曜日',
+            'saturday': '土曜日',
+            'sunday': '日曜日'
+        };
+        
+        const options = days.filter(day => day !== currentDay)
+                           .map(day => `${dayNames[day]}: ${day}`)
+                           .join('\n');
+        
+        const targetDay = prompt(`${mealName}をどの曜日に移動しますか？\n\n${options}\n\n曜日の英語名を入力してください:`);
+        
+        if (targetDay && days.includes(targetDay) && targetDay !== currentDay) {
+            const sourceMealKey = `${currentDay}-dinner`;
+            const targetMealKey = `${targetDay}-dinner`;
+            const existingTargetMeal = this.meals[targetMealKey];
+            
+            this.meals[targetMealKey] = mealName;
+            
+            if (existingTargetMeal) {
+                this.meals[sourceMealKey] = existingTargetMeal;
+            } else {
+                delete this.meals[sourceMealKey];
+            }
+            
+            this.saveToStorage();
+            this.renderMeals();
+            this.announceChange(`${mealName}を${dayNames[targetDay]}に移動しました`);
+        }
     }
 
     exportToCSV() {
@@ -482,6 +756,9 @@ class MealPlanManager {
         const value = input.value.toLowerCase();
         const suggestionContainer = document.getElementById(`suggestions-${day}-${mealType}`);
         
+        // リセット
+        this.currentSuggestionIndex = -1;
+        
         if (value.length < 1) {
             suggestionContainer.innerHTML = '';
             return;
@@ -499,9 +776,16 @@ class MealPlanManager {
             return;
         }
 
-        const suggestionsHTML = allSuggestions.slice(0, 5).map(suggestion => 
-            `<div class="suggestion-item" onclick="mealManager.selectSuggestion('${suggestion}', '${day}', '${mealType}')">${suggestion}</div>`
-        ).join('');
+        // セキュリティ: HTMLエスケープ + アクセシビリティ改善
+        const suggestionsHTML = allSuggestions.slice(0, 5).map((suggestion, index) => {
+            const escapedSuggestion = this.escapeHtml(suggestion);
+            return `<div class="suggestion-item" 
+                         onclick="mealManager.selectSuggestion('${escapedSuggestion}', '${day}', '${mealType}')"
+                         role="option"
+                         tabindex="-1"
+                         aria-selected="false"
+                         data-index="${index}">${escapedSuggestion}</div>`;
+        }).join('');
 
         suggestionContainer.innerHTML = suggestionsHTML;
     }
