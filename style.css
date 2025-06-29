@@ -97,10 +97,40 @@ button:hover {
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-.meal-plan-section h2 {
+.week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.meal-plan-section h2 {
+    margin: 0;
     color: #ad1457;
     font-size: 1.5rem;
+}
+
+.week-dates {
+    background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+}
+
+.date-info {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: normal;
+}
+
+.date-info.today {
+    color: #e91e63;
+    font-weight: bold;
 }
 
 .meal-grid {
@@ -202,6 +232,17 @@ button:hover {
 
 .actions {
     text-align: center;
+    margin-bottom: 50px;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    padding: 10px 20px;
+    margin-right: 10px;
+}
+
+.save-btn:hover {
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
 }
 
 .clear-btn {
@@ -316,4 +357,256 @@ button:hover {
         font-size: 16px;
         padding: 10px;
     }
+}
+
+.history-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    margin-top: 80px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.history-section h2 {
+    margin-bottom: 20px;
+    color: #ad1457;
+    font-size: 1.5rem;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.no-history {
+    text-align: center;
+    color: #c2185b;
+    font-style: italic;
+    padding: 20px;
+}
+
+.history-item {
+    background: #fce4ec;
+    border-radius: 12px;
+    padding: 15px;
+    border: 2px solid #f8bbd9;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.history-date {
+    font-weight: 700;
+    color: #e91e63;
+    font-size: 1.1rem;
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.load-btn {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.load-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);
+}
+
+.delete-history-btn {
+    background: rgba(244, 67, 54, 0.8);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s ease;
+}
+
+.delete-history-btn:hover {
+    background: rgba(244, 67, 54, 1);
+    transform: none;
+    box-shadow: none;
+}
+
+.history-content {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.shopping-list-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.shopping-list-section h2 {
+    margin-bottom: 20px;
+    color: #ad1457;
+    font-size: 1.5rem;
+}
+
+.shopping-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.shopping-input input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #f8bbd9;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.shopping-input input:focus {
+    outline: none;
+    border-color: #e91e63;
+    box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.shopping-input button {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shopping-input button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+.shopping-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.shopping-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fce4ec;
+    border-radius: 8px;
+    border: 1px solid #f8bbd9;
+    transition: all 0.3s ease;
+}
+
+.shopping-item.completed {
+    opacity: 0.6;
+    background: #f5f5f5;
+}
+
+.shopping-item.completed .shopping-text {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.shopping-checkbox {
+    position: relative;
+    display: inline-block;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.shopping-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid #e91e63;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.shopping-checkbox input:checked ~ .checkmark {
+    background: #e91e63;
+}
+
+.shopping-checkbox input:checked ~ .checkmark:after {
+    content: "";
+    position: absolute;
+    display: block;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.shopping-text {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.delete-shopping-btn {
+    background: rgba(244, 67, 54, 0.8);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.2s ease;
+    margin-left: 8px;
+}
+
+.delete-shopping-btn:hover {
+    background: rgba(244, 67, 54, 1);
+    transform: none;
+    box-shadow: none;
+}
+
+.no-items {
+    text-align: center;
+    color: #c2185b;
+    font-style: italic;
+    padding: 20px;
 }

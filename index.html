@@ -20,10 +20,13 @@
         <main>
             
             <div class="meal-plan-section">
-                <h2>今週の夕食</h2>
+                <div class="week-header">
+                    <h2>今週の夕食</h2>
+                    <div class="week-dates" id="week-dates"></div>
+                </div>
                 <div class="meal-grid" id="meal-grid">
                     <div class="day-column" data-day="monday">
-                        <h3>月曜日</h3>
+                        <h3>月曜日 <span class="date-info" id="monday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('monday', 'dinner')">
                                 <div class="meal-content" id="monday-dinner"></div>
@@ -32,7 +35,7 @@
                     </div>
                     
                     <div class="day-column" data-day="tuesday">
-                        <h3>火曜日</h3>
+                        <h3>火曜日 <span class="date-info" id="tuesday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('tuesday', 'dinner')">
                                 <div class="meal-content" id="tuesday-dinner"></div>
@@ -41,7 +44,7 @@
                     </div>
                     
                     <div class="day-column" data-day="wednesday">
-                        <h3>水曜日</h3>
+                        <h3>水曜日 <span class="date-info" id="wednesday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('wednesday', 'dinner')">
                                 <div class="meal-content" id="wednesday-dinner"></div>
@@ -50,7 +53,7 @@
                     </div>
                     
                     <div class="day-column" data-day="thursday">
-                        <h3>木曜日</h3>
+                        <h3>木曜日 <span class="date-info" id="thursday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('thursday', 'dinner')">
                                 <div class="meal-content" id="thursday-dinner"></div>
@@ -59,7 +62,7 @@
                     </div>
                     
                     <div class="day-column" data-day="friday">
-                        <h3>金曜日</h3>
+                        <h3>金曜日 <span class="date-info" id="friday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('friday', 'dinner')">
                                 <div class="meal-content" id="friday-dinner"></div>
@@ -68,7 +71,7 @@
                     </div>
                     
                     <div class="day-column" data-day="saturday">
-                        <h3>土曜日</h3>
+                        <h3>土曜日 <span class="date-info" id="saturday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('saturday', 'dinner')">
                                 <div class="meal-content" id="saturday-dinner"></div>
@@ -77,7 +80,7 @@
                     </div>
                     
                     <div class="day-column" data-day="sunday">
-                        <h3>日曜日</h3>
+                        <h3>日曜日 <span class="date-info" id="sunday-date"></span></h3>
                         <div class="meals">
                             <div class="meal-slot" data-meal="dinner" onclick="mealManager.startEdit('sunday', 'dinner')">
                                 <div class="meal-content" id="sunday-dinner"></div>
@@ -87,8 +90,25 @@
                 </div>
             </div>
             
+            <div class="shopping-list-section">
+                <h2>お買い物リスト</h2>
+                <div class="shopping-input">
+                    <input type="text" id="shopping-item-input" placeholder="材料や調味料を入力" maxlength="50">
+                    <button id="add-shopping-item-btn">追加</button>
+                </div>
+                <ul id="shopping-list" class="shopping-list"></ul>
+            </div>
+            
             <div class="actions">
+                <button id="save-plan-btn" class="save-btn">今週の献立を保存</button>
                 <button id="clear-all-btn" class="clear-btn">全てクリア</button>
+            </div>
+            
+            <div class="history-section">
+                <h2>過去の献立</h2>
+                <div id="history-list" class="history-list">
+                    <div class="no-history">保存された献立はありません</div>
+                </div>
             </div>
         </main>
     </div>
